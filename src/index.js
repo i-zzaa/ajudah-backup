@@ -1,17 +1,37 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import * as serviceWorker from './serviceWorker';
+import { createBrowserHistory } from 'history';
+import { Router, Route, Switch, Redirect } from 'react-router-dom';
+import { isAuthenticated } from './services/auth';
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
+import AuthLayout from './layouts/Auth';
+import AdminLayout from './layouts/Admin';
+
+import './assets/scss/material-dashboard-pro-react.scss';
+
+const hist = createBrowserHistory();
+
+const PrivateRoute = ({ component: Component, ...rest }) => (
+  <Route
+    {...rest}
+    render={(props) =>
+      isAuthenticated() ? (
+        <Component {...props} />
+      ) : (
+        <Redirect to={{ pathname: '/', state: { from: props.location } }} />
+      )
+    }
+  />
 );
 
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.unregister();
+ReactDOM.render(
+  <Router history={hist}>
+    <Switch>
+      <Route path="/auth" component={AuthLayout} />
+      <PrivateRoute path="/admin" component={AdminLayout} />
+      <Redirect from="/" to="/auth/login-page" />
+      <Route path="*" component={() => <h1>Page not found</h1>} />
+    </Switch>
+  </Router>,
+  document.getElementById('root'),
+);
